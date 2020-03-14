@@ -1,4 +1,4 @@
-﻿// Created by Ryan S. White (sunsetquest) on 10/13/2019
+// Created by Ryan S. White (sunsetquest) on 10/13/2019
 // Sharing under the MIT License 
 // Goals: 
 //   (1) benchmark a large set of known methods
@@ -27,7 +27,8 @@ namespace BenchmarkLeading0Count
         static void Main()
         {
             // Configuration (also adjust Linq query below as needed)
-            const int TEST_ITEMS = 100000;
+            Console.WriteLine("This will only test a 10M subset of the 2^32 possibilities for errors so the error count is not exact.");
+            const int TEST_ITEMS = 10000000;
             const int MAX_BIT_SIZE = 31; // 1-31
 
             CheckEnvForProperBenchmarking();
@@ -372,7 +373,7 @@ namespace BenchmarkLeading0Count
             [FieldOffset(0)] public double asDouble;
         }
 
-        // Same as Log2_SunsetQuest3 except
+        // Same as Log2_SunsetQuest3 except it uses FP64.
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int Log2_SunsetQuest4(uint val)
         {

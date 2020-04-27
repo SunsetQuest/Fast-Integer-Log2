@@ -1,4 +1,4 @@
-﻿// Created by Ryan S. White (sunsetquest) on 10/13/2019, updated 2/2020, 4/26/2020
+﻿// Created by Ryan S. White (sunsetquest) on 10/13/2019
 // Sharing under the MIT License 
 // Goals: 
 //   (1) benchmark a large set of known methods
@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -25,14 +24,11 @@ namespace BenchmarkLeading0Count
 {
     class Program
     {
-        // Options
-        const int TEST_ITEMS = 10000000;
-        const int MAX_BIT_SIZE = 31; // 1-31
-
         static void Main()
         {
-            // Configuration (also adjust Linq query below as needed)
-            Console.WriteLine($"This will only test a {TEST_ITEMS} subset of the 2^{MAX_BIT_SIZE+1} possibilities for errors so the error count is not exact.");
+            // Configuration (also adjust Linq quary below as needed)
+            const int TEST_ITEMS = 100000;
+            const int MAX_BIT_SIZE = 15; // 1-31
 
             CheckEnvForProperBenchmarking();
             FillAnswers(TEST_ITEMS, out uint[] tests, out uint[] answers, MAX_BIT_SIZE);
@@ -43,33 +39,32 @@ namespace BenchmarkLeading0Count
 
             var resultList = new List<BenchmarkResults>
             {
-                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest0),        // Integer Log2 created by Sunsetquest on 10/13/2019 - mostly created just to get the correct results
-                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest1),        // Integer Log2 created by Sunsetquest on 10/13/2019 - 1st attempt
-                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest2),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 2nd attempt - not that fast
-                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest3),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 3rd attempt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
-                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest4),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 3rd attempt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
-                RunBenchmark(tests, answers, baseline, BitOperationsLog2SunsetQuest),        // Integer Log2 created by Sunsetquest on 4/26/2020 - modified version of https://stackoverflow.com/a/61337237/2352507 phucl
-                RunBenchmark(tests, answers, baseline, LeadingZeroCountSunsetQuest),        // Integer Log2 created by Sunsetquest on 4/26/2020 
+                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest0),        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/13/2019 - mostly created just to get the correct results
+                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest1),        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/13/2019 - 1st attempt
+                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest2),        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 2nd attempt - not that fast
+                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest3),        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attampt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
+                RunBenchmark(tests, answers, baseline, Log2_SunsetQuest4),        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attampt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
                 RunBenchmark(tests, answers, baseline, Log2_SPWorley),            // Source: https://stackoverflow.com/a/8462598/2352507  SPWorley        3/22/2009   (Converted from c++ to C#, modified for 32 bit) (added 10/18/2019)
                 RunBenchmark(tests, answers, baseline, Msb_Protagonist),          // Source: https://stackoverflow.com/a/671905/2352507   Protagonist     3/23/2009   (converted to C# from c++ by Ryan White)
                 RunBenchmark(tests, answers, baseline, Log2_Flynn1179),           // Source: https://stackoverflow.com/a/8970250/2352507  Flynn1179       1/23/2012
                 RunBenchmark(tests, answers, baseline, UsingStrings_Rob),         // Source: https://stackoverflow.com/a/10439357/2352507 Rob             5/3/2012    (modified from leading zero count to Log2)
                 RunBenchmark(tests, answers, baseline, MostSigBit_spender),       // Source: https://stackoverflow.com/a/10439333/2352507 spender         5/3/2012 
                 RunBenchmark(tests, answers, baseline, log2floor_greggo),         // Source: https://stackoverflow.com/a/12886303/2352507 greggo          10/14/2012  (converted to C# from c++ by Ryan White)
-                RunBenchmark(tests, answers, baseline, FloorLg2_Matthew_Watson), // Source: https://stackoverflow.com/a/15967635/2352507 Matthew Watson  4/12/2013
+                RunBenchmark(tests, answers, baseline, FloorLog2_Matthew_Watson), // Source: https://stackoverflow.com/a/15967635/2352507 Matthew Watson  4/12/2013
                 RunBenchmark(tests, answers, baseline, Log2_WiegleyJ),            // Source: https://stackoverflow.com/a/20342282/2352507 WiegleyJ        12/3/2013
                 RunBenchmark(tests, answers, baseline, getMsb_user3177100),       // Source: https://stackoverflow.com/a/27101794/2352507 user3177100     11/24/2014  (converted to C# from c++ by Ryan White)
                 RunBenchmark(tests, answers, baseline, Log2_DanielSig),           // Source: https://stackoverflow.com/a/30643928/2352507 DanielSig       4/5/2015
                 RunBenchmark(tests, answers, baseline, Log2_HarrySvensson),       // Source: https://stackoverflow.com/a/44221387/2352507 Harry Svensson  5/27/2017   (converted to C# and 32 bit use by Ryan White)
                 RunBenchmark(tests, answers, baseline, BitScanReverse2),          // Source: https://stackoverflow.com/a/47049483/2352507 Derek Ziemba    11/1/2017
                 RunBenchmark(tests, answers, baseline, Log2_Papayaved),           // Source: https://stackoverflow.com/a/50718255/2352507 Papayaved       6/6/2016
-                RunBenchmark(tests, answers, baseline, FloorLog2_SN17),           // Source: https://stackoverflow.com/a/56556550/2352507 SN17            6/12/2019   (slightly modified for 32 bit vs 16-bit)
+                RunBenchmark(tests, answers, baseline, FloorLog2_SN17),           // Source: https://stackoverflow.com/a/56556550/2352507 SN17            6/12/2019   (slighly modified for 32 bit vs 16-bit)
                 RunBenchmark(tests, answers, baseline, highestBitUnrolled_Kaz),   // Source: https://stackoverflow.com/a/8462598/2352507  Kaz Kylheku     12/11/11    (Converted from c++ to C#, modified for 32 bit, lowed output value by 1)
-                RunBenchmark(tests, answers, baseline, Leading0Count_phuclv),     // Source: https://stackoverflow.com/a/61337237/2352507 phuclv          4/21/2020 
-                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill1),    // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White) 
-                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill2),    // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White)
-                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill3),    // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White)
-                //RunBenchmark(tests, answers, baseline, log2_quirinpa),          // Source: https://stackoverflow.com/a/37769223/2352507 quirinpa        6/11/2016   (slightly modified for c# from C++, changed return to int) - looks like this one gets the first bit set and not most significant bit
+                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill1),      // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White) 
+                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill2),      // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White)
+                //RunBenchmark(tests, answers, baseline, Log2_ChuckCottrill3),      // Source: https://stackoverflow.com/a/33189337/2352507 Chuck Cottrill  8/17/2015   (converted to C# from c++ by Ryan White)
+                //RunBenchmark(tests, answers, baseline, log2_quirinpa),            // Source: https://stackoverflow.com/a/37769223/2352507 quirinpa        6/11/2016   (slighly modified for c# from C++, changed return to int) - looks like this one gets the first bit set and not most significant bit
+
+
             };
 
             var result = from r in resultList
@@ -352,7 +347,7 @@ namespace BenchmarkLeading0Count
             return -1;
         }
 
-        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attempt - Thought of using exponent of float inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
+        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attampt - Thought of using exponent of float inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
         [StructLayout(LayoutKind.Explicit)]
         private struct ConverterStruct
         {
@@ -360,9 +355,9 @@ namespace BenchmarkLeading0Count
             [FieldOffset(0)] public float asFloat;
         }
 
-        // How I came up with this? I thought I came up with the idea of using the exponent from a integer to float conversion and was super excited. But after then I re-read a post by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507 (c++ code) and now I think this is what seeded the idea in my brain. 
+        // How I came up with this? I thought I came up with the idea of using the exponent from a integer to float conversion and was super excited. But after then I re-reada post by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507 (c++ code) and now I think this is what seeded the idea in my brain. 
         // My version is little different then SPWorley's "double ff=(double)(v|1);return ((*(1+(uint32_t*)&ff))>>20)-1023;"        
-        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attempt - Inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
+        // Integer Log2 created by Ryan S. White (Sunsetquest) on 10/15/2019 - 3rd attampt - Inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int Log2_SunsetQuest3(uint val)
         {
@@ -377,7 +372,7 @@ namespace BenchmarkLeading0Count
             [FieldOffset(0)] public double asDouble;
         }
 
-        // Same as Log2_SunsetQuest3 except it uses FP64.
+        // Same as Log2_SunsetQuest3 except
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int Log2_SunsetQuest4(uint val)
         {
@@ -491,7 +486,7 @@ namespace BenchmarkLeading0Count
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         // Source: https://stackoverflow.com/a/15967635/2352507 Matthew Watson 4/12/2013
-        public static int FloorLg2_Matthew_Watson(uint x)
+        public static int FloorLog2_Matthew_Watson(uint x)
         {
             x |= (x >> 1);
             x |= (x >> 2);
@@ -533,7 +528,7 @@ namespace BenchmarkLeading0Count
             return r;
         }
 
-        // Source: https://stackoverflow.com/a/56556550/2352507 SN17 6/12/2019 (slightly modified for 32 bit vs 16-bit)
+        // Source: https://stackoverflow.com/a/56556550/2352507 SN17 6/12/2019 (slighly modified for 32 bit vs 16-bit)
         [MethodImpl(MethodImplOptions.NoInlining)]
         static int FloorLog2_SN17(uint value)
         {
@@ -547,7 +542,7 @@ namespace BenchmarkLeading0Count
             return 31;
         }
 
-        // Source: https://stackoverflow.com/a/37769223/2352507 quirinpa 6/11/2016 (slightly modified for c# from C++, changed return to int)
+        // Source: https://stackoverflow.com/a/37769223/2352507 quirinpa 6/11/2016 (slighly modified for c# from C++, changed return to int)
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int log2_quirinpa(uint n)
         {
@@ -845,32 +840,8 @@ namespace BenchmarkLeading0Count
         {
             return Convert.ToString(val, 2).Count() - 1;
         }
+        
 
-
-        // Source: https://stackoverflow.com/a/61337237/2352507 phuclv 4/21/2020 
-        // Available in .NET Core 3.0
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int Leading0Count_phuclv(uint x)
-        {
-            int bits = x == 0 ? 1 : 64 - BitOperations.LeadingZeroCount(x);
-            return bits;
-        }
-
-        // Sunsetquest 4/24/2020 
-        // requires in .NET Core 3.0
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int BitOperationsLog2SunsetQuest(uint x)
-        {
-            return BitOperations.Log2(x);
-        }
-
-        // Sunsetquest 4/24/2020 - idea of using new LeadingZeroCount .Net Core 3.0 feature from phuclv 4/21/2020 (https://stackoverflow.com/a/61337237/2352507)
-        // requires in .NET Core 3.0
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int LeadingZeroCountSunsetQuest(uint x)
-        {
-            return 31 - BitOperations.LeadingZeroCount(x);
-        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int ForTiming(uint x)
@@ -879,7 +850,7 @@ namespace BenchmarkLeading0Count
         }
 
 
-        private static BenchmarkResults RunBenchmark(uint[] testValues, uint[] answers, long baseline, Func<uint, int> methodToRun)
+        private static BenchmarkResults RunBenchmark(uint[] testValues, uint[] answers, in long baseline, Func<uint, int> methodToRun)
         {
             BenchmarkResults res;
             res.errors = 0;
@@ -892,10 +863,10 @@ namespace BenchmarkLeading0Count
                     res.errors++;
             sw.Stop();
             res.ticks = sw.ElapsedTicks;
-            res.supports32Bits = methodToRun(0xF0000000) == 31;
-            res.supportsZero = methodToRun(0) <= 0;
-            res.results = res.MethodName.PadRight(20) + "\t" + (res.ticks - baseline) * 1000 / testValues.Length 
-                + "\t" + res.errors + " errors." 
+            res.supports32Bits = (methodToRun(0xF0000000) ==31);
+            res.supportsZero = (methodToRun(0)<0);
+            res.results = res.MethodName + ": " + (res.ticks - baseline) * 1000 / testValues.Length 
+                + " with " + res.errors + " errors." 
                 + " (Supports full 32-bit:" + (res.supports32Bits?"Y":"N") + ")" 
                 + " (Supports Neg Return on Zero:" + (res.supportsZero ? "Y" : "N") + ")";
             return res;

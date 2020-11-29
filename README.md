@@ -1,7 +1,7 @@
 # Fast Integer Log2 in C#
 Benchmark several others and also some of my own.
 
-Created by Ryan S. White (sunsetquest) on 10/13/2019
+Created by Ryan S. White (sunsetQuest) on 10/13/2019, 11/29/2020
 
 Licensed under MIT  
 
@@ -45,44 +45,49 @@ Using: (AMD Ryzen CPU, Release mode, no-debugger attached, .net core 2.1
     BitScanReverse2         228    240  1132340   215    2M      N       Y
     Log2floor_greggo         89    101   2x10^7   263     0      Y       Y
     UsingStrings_Rob       2346   1494   2x10^7  2079     0      Y       Y
+    
+                            1-2^32              32-Bit     Zero
+    Name                    ticks     Errors     Support  Support
+    =============================================================
+    LeadingZeroCountSunset   2         0         Yes       Yes
+    BitOpsLog2SunsetQuest    2         0         Yes       Yes
+    Log2_SunsetQuest5        15        0         Yes       No
+    Log2_SunsetQuest4        17        0         Yes       No
+    Log2_SunsetQuest3        17        0         Yes       No
+    MostSigBit_spender       18        0         Yes       Yes
+    Log2_SPWorley            18        2         Yes       Yes
+    FloorLg2_Matthew_Watson  22        0         Yes       Yes
+    Log2_DanielSig           27        312500    No        Yes
+    Log2_HarrySvensson       30        0         Yes       Yes
+    Log2_WiegleyJ            31        0         Yes       Yes
+    Log2_SunsetQuest1        34        0         Yes       Yes
+    highestBitUnrolled_Kaz   37        312500    Yes       Yes
+    getMsb_user3177100       68        0         Yes       Yes
+    Msb_Protagonist          69        0         Yes       Yes
+    Log2_Flynn1179           70        0         Yes       Yes
+    Log2_Papayaved           87        0         Yes       Yes
+    log2floor_greggo         90        0         Yes       Yes
+    FloorLog2_SN17           98        0         Yes       Yes
+    Log2_SunsetQuest2        133       0         Yes       Yes
+    Log2_SunsetQuest0        212       0         Yes       Yes
+    BitScanReverse_Other     828       0         Yes       Yes
+    UsingStrings_Other       2116      0         Yes       Yes
+
+
+    
         
     Zero_Support = Supports Zero if the result is 0 or less
     Full-32-Bit  = Supports full 32-bit (some just support 31 bits)
-    Time1 = benchmark for sizes up to 32-bit (same number tried for each size)
-    Time2 = benchmark for sizes up to 16-bit (for measuring perf on small numbers)
-    Time3 = time to run entire 1-2^32 in sequence using Parallel.For. Most results range will on the larger end like 30/31 log2 results. (note: because random was not used some compiler optimization might have been applied so this result might not be accurate) 
-    Time4 = .Net Core 3.1(note: because random was not used some compiler optimization might have been applied so this result might not be accurate) 
+    Time4 = .Net 5.0 (note: because random was not used some compiler optimization might have been applied so this result might not be accurate) 
 
 	
 
-## The winner for raw speed
-Here is the quickest way to compute log2 of an integer in C#...
+## And the winner is...
+Fast, safe, and portable
 
-        [StructLayout(LayoutKind.Explicit)]
-        private struct ConverterStruct2
-        {
-            [FieldOffset(0)] public ulong asLong;
-            [FieldOffset(0)] public double asDouble;
-        }
+        BitOperations.Log2(x);
+        
 
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int Log2_SunsetQuest4(uint val)
-        {
-            ConverterStruct2 a;  a.asLong = 0; a.asDouble = val;
-            return (int)((a.asLong >> 52) + 1) & 0xFF;
-        }
- Notes:
- - The idea of using the exponent in a floating point was inspired by [SPWorley
-   3/22/2009][1].  
- - This also supports more than 32 bits. I have not tested the max but did go to at least 2^38. 
- - Use with caution on production code since this can possibly fail on architectures that are not little-endianness.
- 
- ## The winner for best overall
-I really like the one created by [spender in another post][2]. This one does not have the potential architecture issue and it also supports Zero while maintaining almost the same performance as the float method from SPWorley and Sunsetquest4.
-
-3/13/2020 Update: [Steve noticed][3] that there were some errors in Log2_SunsetQuest3 that were missed. Thank you Steve for finding those.  The chart above was also updated.
- 
 [1]: https://stackoverflow.com/a/671826/2352507
-[2]: https://stackoverflow.com/a/10439333/2352507
-[3]: https://github.com/SunsetQuest/Fast-Integer-Log2/issues/1
+

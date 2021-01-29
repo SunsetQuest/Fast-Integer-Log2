@@ -17,6 +17,7 @@ Licensed under MIT
    "find last set" 
    "most significant set bit"
 
+
 ## Benchmark results
 Using: (AMD Ryzen CPU, Release mode, no-debugger attached, .net core 2.1
 
@@ -28,7 +29,7 @@ Using: (AMD Ryzen CPU, Release mode, no-debugger attached, .net core 2.1
     BitOpsLog2SunsetQuest    2         0         Yes       Yes
     Log2_SunsetQuest5        15        0         Yes       No
     Log2_SunsetQuest4        17        0         Yes       No
-    Log2_SunsetQuest3        17        0         Yes       No
+    Log2_SunsetQuest3        17        255       Yes       No
     MostSigBit_spender       18        0         Yes       Yes
     Log2_SPWorley            18        2         Yes       Yes
     FloorLg2_Matthew_Watson  22        0         Yes       Yes
@@ -55,7 +56,6 @@ Using: (AMD Ryzen CPU, Release mode, no-debugger attached, .net core 2.1
     Full-32-Bit  = Supports full 32-bit (some just support 31 bits)
     Time4 = .Net 5.0 (note: because random was not used some compiler optimization might have been applied so this result might not be accurate) 
 
-	
 
 ## And the winner is...
 Fast, safe, and portable

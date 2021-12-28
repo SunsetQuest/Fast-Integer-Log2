@@ -1,4 +1,4 @@
-// Created by Ryan S. White (sunsetquest) on 10/13/2019, updated 2/2020, 4/26/2020. 11/29/2020
+// Created by Ryan S. White (sunsetquest) on 10/13/2019, updated 2/2020, 4/26/2020. 11/29/2020, 12/27/2021
 // Sharing under the MIT License 
 // Goals: 
 //   (1) benchmark a large set of known methods
@@ -49,14 +49,15 @@ namespace BenchmarkLeading0Count
                 resultList.Clear();
                 resultList = new List<BenchmarkResults>
                 {
+                    RunBenchmark(tests, answers, baseline, BitOperationsLog2),        // Integer Log2 created by Sunsetquest on 4/26/2020 - modified version of https://stackoverflow.com/a/61337237/2352507 phucl
+                    RunBenchmark(tests, answers, baseline, LeadingZeroCount),         // Integer Log2 created by Sunsetquest on 4/26/2020 
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest0),        // Integer Log2 created by Sunsetquest on 10/13/2019 - mostly created just to get the correct results
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest1),        // Integer Log2 created by Sunsetquest on 10/13/2019 - 1st attempt
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest2),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 2nd attempt - not that fast
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest3),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 3rd attempt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest4),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 3rd attempt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
                     RunBenchmark(tests, answers, baseline, Log2_SunsetQuest5),        // Integer Log2 created by Sunsetquest on 10/15/2019 - 3rd attempt - Using Exponent in float idea was inspired by SPWorley 3/22/09 - https://stackoverflow.com/a/671826/2352507
-                    RunBenchmark(tests, answers, baseline, BitOpsLog2SunsetQuest),    // Integer Log2 created by Sunsetquest on 4/26/2020 - modified version of https://stackoverflow.com/a/61337237/2352507 phucl
-                    RunBenchmark(tests, answers, baseline, LeadingZeroCountSunset),   // Integer Log2 created by Sunsetquest on 4/26/2020 
+                    RunBenchmark(tests, answers, baseline, Log2_500InternalSvrErr),   // Integer Log2 created by  500 - Internal Server Error 10-16-2019 https://stackoverflow.com/a/58413042/2352507
                     RunBenchmark(tests, answers, baseline, Log2_SPWorley),            // Source: https://stackoverflow.com/a/8462598/2352507  SPWorley        3/22/2009   (Converted from c++ to C#, modified for 32 bit) (added 10/18/2019)
                     RunBenchmark(tests, answers, baseline, Msb_Protagonist),          // Source: https://stackoverflow.com/a/671905/2352507   Protagonist     3/23/2009   (converted to C# from c++ by Ryan White)
                     RunBenchmark(tests, answers, baseline, Log2_Flynn1179),           // Source: https://stackoverflow.com/a/8970250/2352507  Flynn1179       1/23/2012
@@ -880,7 +881,7 @@ namespace BenchmarkLeading0Count
         // Sunsetquest 4/24/2020 
         // requires in .NET Core 3.0
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int BitOpsLog2SunsetQuest(uint x)
+        public static int BitOperationsLog2(uint x)
         {
             return BitOperations.Log2(x);
         }
@@ -888,15 +889,35 @@ namespace BenchmarkLeading0Count
         // Sunsetquest 4/24/2020 - idea of using new LeadingZeroCount .Net Core 3.0 feature from phuclv 4/21/2020 (https://stackoverflow.com/a/61337237/2352507)
         // requires in .NET Core 3.0
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static int LeadingZeroCountSunset(uint x)
+        public static int LeadingZeroCount(uint x)
         {
             return 31 - BitOperations.LeadingZeroCount(x);
         }
 
+
+        [StructLayout(LayoutKind.Explicit)]
+        struct UnionWorker
+        {
+            [FieldOffset(0)]
+            public int i;
+            [FieldOffset(0)]
+            public float f;
+        }
+
+        // 500 - Internal Server Error 10-16-2019 https://stackoverflow.com/a/58413042/2352507
         [MethodImpl(MethodImplOptions.NoInlining)]
+        static int Log2_500InternalSvrErr(uint b)
+        {
+            UnionWorker u;
+            u.i = 0; // just to please the compiler
+            u.f = b;
+            return Math.Max((u.i >> 23) & 0xFF, 126) - 126;
+        }
+
+        //[MethodImpl(MethodImplOptions.NoInlining)]
         public static int ForTiming(uint x)
         {
-            return (int)(x+x);
+            return (int)(x);
         }
 
 
@@ -995,4 +1016,3 @@ namespace BenchmarkLeading0Count
 
 // Additional Sources:
 // for [MethodImpl(MethodImplOptions.NoInlining)] idea https://stackoverflow.com/a/17307712/2352507  (June 25 2013)
-
